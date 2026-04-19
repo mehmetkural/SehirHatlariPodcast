@@ -7,176 +7,79 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  <script>
-    tailwind.config = {
-      darkMode: "class",
-      theme: {
-        extend: {
-          colors: {
-            "outline": "#707881",
-            "secondary-container": "#d3e1f6",
-            "secondary": "#525f71",
-            "on-primary-container": "#f3f7ff",
-            "surface-container-lowest": "#ffffff",
-            "on-primary": "#ffffff",
-            "tertiary-fixed": "#6bfe9c",
-            "inverse-primary": "#94ccff",
-            "primary": "#005d90",
-            "tertiary-container": "#008343",
-            "on-secondary-fixed-variant": "#3a4859",
-            "on-background": "#1a1c1c",
-            "surface-variant": "#e2e2e2",
-            "inverse-on-surface": "#f0f1f1",
-            "primary-container": "#0077b6",
-            "on-primary-fixed-variant": "#004b74",
-            "secondary-fixed-dim": "#bac8dc",
-            "tertiary": "#006733",
-            "surface-container-low": "#f3f3f3",
-            "surface-bright": "#f9f9f9",
-            "on-error": "#ffffff",
-            "surface-container": "#eeeeee",
-            "on-primary-fixed": "#001d32",
-            "on-secondary-container": "#566475",
-            "primary-fixed": "#cde5ff",
-            "secondary-fixed": "#d6e4f9",
-            "error": "#ba1a1a",
-            "inverse-surface": "#2f3131",
-            "on-tertiary": "#ffffff",
-            "tertiary-fixed-dim": "#4ae183",
-            "primary-fixed-dim": "#94ccff",
-            "surface-dim": "#dadada",
-            "on-surface": "#1a1c1c",
-            "on-tertiary-fixed-variant": "#005228",
-            "on-error-container": "#93000a",
-            "on-tertiary-fixed": "#00210c",
-            "background": "#f9f9f9",
-            "on-tertiary-container": "#e2ffe4",
-            "surface": "#f9f9f9",
-            "surface-container-high": "#e8e8e8",
-            "on-secondary": "#ffffff",
-            "error-container": "#ffdad6",
-            "on-secondary-fixed": "#0f1c2c",
-            "surface-tint": "#006399",
-            "surface-container-highest": "#e2e2e2",
-            "on-surface-variant": "#404850",
-            "outline-variant": "#bfc7d1"
-          },
-          fontFamily: {
-            "headline": ["Plus Jakarta Sans"],
-            "body": ["Manrope"],
-            "label": ["Manrope"]
-          }
-        }
-      }
-    }
-  </script>
   <link rel="stylesheet" href="css/style.css" />
-  <style>
-    body { height: 100dvh; overflow: hidden; }
-  </style>
 </head>
-<body class="font-body text-on-surface antialiased bg-[#0d1b2a] flex flex-col">
+<body class="player-page">
 
-  <!-- Ambient background -->
-  <div class="fixed inset-0 -z-10 pointer-events-none">
-    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(0,119,182,0.18),transparent_65%)]"></div>
-    <div class="absolute bottom-0 right-0 w-80 h-80 bg-[radial-gradient(circle,rgba(74,225,131,0.06),transparent_70%)]"></div>
+  <!-- Ambient gradients -->
+  <div class="player-ambient">
+    <div class="player-ambient-a"></div>
+    <div class="player-ambient-b"></div>
   </div>
 
   <!-- ── Header ── -->
-  <header class="flex-shrink-0 z-20">
-    <div class="flex justify-between items-center px-5 py-5">
-      <div class="flex items-center gap-4">
-        <button onclick="location.href='index.html'"
-          class="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors text-white">
-          <span class="material-symbols-outlined text-xl">arrow_back</span>
-        </button>
-        <div>
-          <h1 id="header-title" class="font-headline font-bold text-white text-base tracking-tight leading-tight">—</h1>
-          <p id="header-subtitle" class="font-body text-blue-200/60 text-[11px] font-medium"></p>
-        </div>
+  <header class="player-header">
+    <div class="player-header-row">
+      <button class="player-back" onclick="location.href='index.html'">
+        <span class="material-symbols-outlined">arrow_back</span>
+      </button>
+      <div class="player-titles">
+        <h1 class="player-route-name font-headline" id="header-title">—</h1>
+        <p class="player-route-sub" id="header-subtitle"></p>
       </div>
-      <button id="gps-btn" onclick="toggleGPS()"
-        class="flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/20 bg-white/10 hover:bg-white/20 transition-all">
-        <span id="gps-dot" class="w-2 h-2 rounded-full bg-white/40 transition-all duration-300"></span>
-        <span id="gps-label" class="text-[10px] font-bold text-white/60 uppercase tracking-widest transition-colors">GPS</span>
+      <button class="gps-badge" id="gps-btn" onclick="toggleGPS()">
+        <span class="gps-dot" id="gps-dot"></span>
+        <span class="gps-label" id="gps-label">GPS</span>
       </button>
     </div>
-    <!-- Progress bar -->
-    <div class="w-full h-1.5 bg-white/10 overflow-hidden">
-      <div id="progress-fill"
-        class="h-full bg-gradient-to-r from-primary-container to-tertiary-fixed-dim transition-all duration-500 shadow-[0_0_12px_rgba(0,119,182,0.5)]"
-        style="width:0%"></div>
+    <div class="player-progress">
+      <div class="player-progress-fill" id="progress-fill"></div>
     </div>
   </header>
 
-  <!-- ── Panel Container ── -->
-  <div class="flex-1 min-h-0 relative">
+  <!-- ── Panels ── -->
+  <div class="player-panels">
 
     <!-- Podcast Panel -->
-    <div id="panel-podcast" class="absolute inset-0 flex flex-col px-5 pt-4 pb-3 gap-4 overflow-y-auto">
+    <div class="panel panel--podcast" id="panel-podcast">
 
-      <!-- Content Card -->
-      <div class="bg-white rounded-2xl shadow-[0_24px_56px_rgba(0,0,0,0.45)] flex flex-col flex-1 min-h-0 overflow-hidden relative">
-
-        <!-- Maritime motif -->
-        <div class="absolute bottom-3 right-4 opacity-[0.035] pointer-events-none select-none">
+      <!-- Floating card -->
+      <div class="content-card">
+        <div class="card-motif">
           <svg width="110" height="38" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M0 20C20 10 30 30 50 20C70 10 80 30 100 20C110 15 115 17.5 120 20V40H0V20Z" fill="#005d90"/>
           </svg>
         </div>
-
-        <div class="p-6 sm:p-8 flex flex-col h-full">
-
-          <!-- Stop meta row -->
-          <div class="flex justify-between items-start mb-5 flex-shrink-0">
-            <span id="stop-badge"
-              class="bg-primary/10 text-primary px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest border border-primary/20">
-              — / —
-            </span>
-            <span id="stop-time-badge" class="text-outline text-xs font-semibold flex items-center gap-1">
-              <span class="material-symbols-outlined" style="font-size:14px">schedule</span>
-              —
+        <div class="card-body">
+          <div class="stop-meta-row">
+            <span class="stop-badge" id="stop-badge">— / —</span>
+            <span class="stop-time-badge" id="stop-time-badge">
+              <span class="material-symbols-outlined">schedule</span> —
             </span>
           </div>
-
-          <!-- Stop name -->
-          <h2 id="stop-title" class="font-headline font-extrabold text-primary text-[1.65rem] leading-tight mb-5 flex-shrink-0">—</h2>
-
-          <!-- Scrollable text -->
-          <div id="paragraphs" class="flex-1 overflow-y-auto space-y-4 min-h-0 pr-0.5"></div>
-
-          <!-- TTS button -->
-          <div class="flex-shrink-0 mt-5">
-            <button id="tts-btn" onclick="toggleTTS()"
-              class="w-full bg-gradient-to-r from-primary to-primary-container text-white py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-primary/25 hover:scale-[0.98] active:scale-95 transition-transform">
-              <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1">volume_up</span>
-              <span id="tts-label">Sesli Dinle</span>
-            </button>
-          </div>
-
+          <h2 class="stop-title font-headline" id="stop-title">—</h2>
+          <div class="stop-paragraphs" id="paragraphs"></div>
+          <button class="tts-btn" id="tts-btn" onclick="toggleTTS()">
+            <span class="material-symbols-outlined">volume_up</span>
+            <span id="tts-label">Sesli Dinle</span>
+          </button>
         </div>
       </div>
 
       <!-- Playback controls -->
-      <div class="flex items-center justify-between px-1 flex-shrink-0 pb-1">
-        <div class="flex items-center gap-5">
-          <button id="btn-prev" onclick="goToStop(currentStopIndex - 1)"
-            class="text-white/50 hover:text-white transition-colors">
-            <span class="material-symbols-outlined text-[2rem]">skip_previous</span>
+      <div class="playback-controls">
+        <div class="skip-btns">
+          <button class="skip-btn" id="btn-prev" onclick="goToStop(currentStopIndex - 1)">
+            <span class="material-symbols-outlined">skip_previous</span>
           </button>
-          <button id="btn-next" onclick="goToStop(currentStopIndex + 1)"
-            class="text-white/50 hover:text-white transition-colors">
-            <span class="material-symbols-outlined text-[2rem]">skip_next</span>
+          <button class="skip-btn" id="btn-next" onclick="goToStop(currentStopIndex + 1)">
+            <span class="material-symbols-outlined">skip_next</span>
           </button>
         </div>
-        <div class="flex items-center gap-3">
-          <span class="text-white/40 text-[10px] font-bold uppercase tracking-wider">Otomatik Geçiş</span>
-          <button id="auto-toggle-btn" onclick="toggleAutoAdvance()"
-            class="w-11 h-6 rounded-full relative flex items-center px-1 bg-white/15 transition-colors duration-200">
-            <div id="auto-toggle-dot"
-              class="w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-200"></div>
+        <div class="auto-section">
+          <span class="auto-label">Otomatik Geçiş</span>
+          <button class="auto-toggle" id="auto-toggle" onclick="toggleAutoAdvance()">
+            <div class="auto-toggle-dot"></div>
           </button>
         </div>
       </div>
@@ -184,50 +87,41 @@
     </div>
 
     <!-- Stops Panel -->
-    <div id="panel-stops" class="absolute inset-0 bg-surface overflow-y-auto hidden">
-      <div class="px-4 pt-5 pb-10">
-        <p class="text-[10px] font-extrabold uppercase tracking-widest text-outline mb-4 px-2">Tüm Duraklar</p>
+    <div class="panel panel--stops hidden" id="panel-stops">
+      <div class="stops-inner">
+        <p class="stops-label">Tüm Duraklar</p>
         <div id="stops-list"></div>
       </div>
     </div>
 
     <!-- Map Panel -->
-    <div id="panel-map" class="absolute inset-0 hidden">
-      <div id="route-map" class="w-full h-full"></div>
+    <div class="panel panel--map hidden" id="panel-map">
+      <div id="route-map"></div>
     </div>
 
   </div>
 
-  <!-- ── Bottom Navigation ── -->
-  <nav class="flex-shrink-0 flex justify-around items-center px-4 pb-7 pt-3 bg-white/5 backdrop-blur-xl border-t border-white/8 relative">
-
-    <button onclick="switchTab('podcast')" id="tab-podcast"
-      class="flex flex-col items-center justify-center px-5 py-1.5 relative group">
-      <span class="material-symbols-outlined text-white text-2xl transition-all" style="font-variation-settings:'FILL' 1" id="icon-podcast">podcasts</span>
-      <span class="font-headline font-bold text-[10px] text-white mt-1 uppercase tracking-widest">Podcast</span>
-      <div id="ind-podcast" class="absolute -bottom-0.5 w-10 h-1 bg-tertiary-fixed rounded-full shadow-[0_0_10px_rgba(74,225,131,0.7)]"></div>
+  <!-- ── Player Bottom Nav ── -->
+  <nav class="player-nav">
+    <button class="player-nav-btn active" id="tab-podcast" onclick="switchTab('podcast')">
+      <span class="material-symbols-outlined">podcasts</span>
+      Podcast
+      <div class="nav-indicator"></div>
     </button>
-
-    <button onclick="switchTab('stops')" id="tab-stops"
-      class="flex flex-col items-center justify-center text-white/40 px-4 py-1.5 hover:text-white/70 transition-colors relative group">
-      <span class="material-symbols-outlined text-2xl" id="icon-stops">directions_boat</span>
-      <span class="font-headline font-bold text-[10px] mt-1 uppercase tracking-widest">Duraklar</span>
-      <div id="ind-stops" class="hidden absolute -bottom-0.5 w-10 h-1 bg-tertiary-fixed rounded-full shadow-[0_0_10px_rgba(74,225,131,0.7)]"></div>
+    <button class="player-nav-btn" id="tab-stops" onclick="switchTab('stops')">
+      <span class="material-symbols-outlined">directions_boat</span>
+      Duraklar
+      <div class="nav-indicator"></div>
     </button>
-
-    <button onclick="switchTab('map')" id="tab-map"
-      class="flex flex-col items-center justify-center text-white/40 px-4 py-1.5 hover:text-white/70 transition-colors relative group">
-      <span class="material-symbols-outlined text-2xl" id="icon-map">map</span>
-      <span class="font-headline font-bold text-[10px] mt-1 uppercase tracking-widest">Harita</span>
-      <div id="ind-map" class="hidden absolute -bottom-0.5 w-10 h-1 bg-tertiary-fixed rounded-full shadow-[0_0_10px_rgba(74,225,131,0.7)]"></div>
+    <button class="player-nav-btn" id="tab-map" onclick="switchTab('map')">
+      <span class="material-symbols-outlined">map</span>
+      Harita
+      <div class="nav-indicator"></div>
     </button>
-
   </nav>
 
-  <!-- Toast notification -->
-  <div id="gps-notif"
-    class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-[#1b2d40]/90 backdrop-blur-xl text-white px-5 py-2.5 rounded-full text-xs font-bold z-50 border border-white/20 shadow-xl pointer-events-none whitespace-nowrap transition-opacity duration-300"
-    style="opacity:0"></div>
+  <!-- Toast -->
+  <div class="toast" id="gps-notif"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="js/routes.js"></script>
