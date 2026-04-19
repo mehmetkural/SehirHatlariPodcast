@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Şehir Hatları Podcast</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body class="player-page">
+
+  <!-- Header -->
+  <header class="player-header">
+    <button class="back-btn" onclick="location.href='index.html'" title="Geri">←</button>
+    <div class="player-header-info">
+      <h2 id="header-title">—</h2>
+      <div class="subtitle" id="header-subtitle"></div>
+    </div>
+    <button class="gps-btn" id="gps-btn" title="GPS ile konumu takip et">
+      📍 GPS
+    </button>
+  </header>
+
+  <!-- Mobile tabs -->
+  <div class="player-tabs" id="player-tabs">
+    <button class="tab-btn active" data-target="podcast">🎙️ Podcast</button>
+    <button class="tab-btn" data-target="stops">📍 Duraklar</button>
+    <button class="tab-btn" data-target="map">🗺️ Harita</button>
+  </div>
+
+  <!-- Body -->
+  <div class="player-body">
+
+    <!-- Stops sidebar -->
+    <aside class="stops-panel" id="stops-panel" data-tab="stops">
+      <div class="stops-panel-title">Duraklar</div>
+      <div id="stops-list"></div>
+    </aside>
+
+    <!-- Podcast panel -->
+    <section class="podcast-panel" id="podcast-panel" data-tab="podcast" style="display:flex;">
+      <div class="podcast-progress-bar">
+        <div class="podcast-progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+      <div class="podcast-content" id="podcast-content">
+        <div class="status-message">Yükleniyor…</div>
+      </div>
+    </section>
+
+    <!-- Map panel -->
+    <div class="map-panel" id="map-panel" data-tab="map">
+      <div id="route-map"></div>
+      <div class="map-overlay" id="map-overlay" style="display:none">
+        <div class="map-overlay-title" id="overlay-stop"></div>
+        <div class="map-overlay-text" id="overlay-desc"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- GPS notification -->
+  <div class="gps-notification" id="gps-notif"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/routes.js"></script>
+  <script src="js/player.js"></script>
+
+</body>
+</html>

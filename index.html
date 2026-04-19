@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Şehir Hatları Podcast — İstanbul Boğaz Yolculukları</title>
+  <meta name="description" content="İstanbul Şehir Hatları vapurlarıyla seyahat ederken rotanızdaki tarihi eserleri ve önemli noktaları keşfedin." />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <header class="home-header">
+    <div class="logo">⚓</div>
+    <h1>Şehir Hatları Podcast</h1>
+    <p>Vapurla ilerledikçe İstanbul'un binlerce yıllık tarihini dinleyin. Her iskele, bir hikaye.</p>
+  </header>
+
+  <main class="home-content">
+    <p class="section-title">Hatlar</p>
+    <div class="routes-grid" id="routes-grid"></div>
+  </main>
+
+  <script src="js/routes.js"></script>
+  <script>
+    const grid = document.getElementById('routes-grid');
+
+    ROUTES.forEach(route => {
+      const card = document.createElement('a');
+      card.className = 'route-card';
+      card.href = `player.html?route=${route.id}`;
+      card.style.borderTopColor = route.color;
+
+      card.innerHTML = `
+        <div class="route-card-top">
+          <span class="route-emoji">${route.emoji}</span>
+          <div>
+            <div class="route-name">${route.name}</div>
+            <div class="route-subtitle">${route.subtitle}</div>
+          </div>
+        </div>
+        <p class="route-desc">${route.description}</p>
+        <div class="route-meta">
+          <span>🕐 ~${route.duration} dakika</span>
+          <span>📍 ${route.stops.length} durak</span>
+        </div>
+        <div class="route-cta">Yolculuğa Başla →</div>
+      `;
+
+      grid.appendChild(card);
+    });
+  </script>
+
+</body>
+</html>
