@@ -174,33 +174,148 @@ function updateMapFocus(index) {
 }
 
 /* ─── TTS ─── */
-function toggleTTS() { isSpeaking ? cancelTTS() : startTTS(); }
 
-function startTTS() {
-  if (!window.speechSynthesis) { showToast('Sesli okuma desteklenmiyor.'); return; }
+// ElevenLabs: Charlotte — warm, engaging multilingual female voice
+const EL_VOICE_ID  = 'XB0fDUnXU5powFXDhCwa';
+const EL_MODEL     = 'eleven_multilingual_v2';
+const EL_SETTINGS  = { stability: 0.42, similarity_boost: 0.78, style: 0.55, use_speaker_boost: true };
+
+let currentAudio = null;
+const _audioCache = {};
+
+function toggleTTS() {
+  if (isSpeaking) { cancelTTS(); return; }
+
+  const key = localStorage.getItem('el_key');
+  if (!key) { showApiDialog(); return; }
+
+  startTTS(key);
+}
+
+async function startTTS(key) {
   const text = route.stops[currentStopIndex].content.join(' ');
+
+  // Try ElevenLabs first
+  const ok = await speakElevenLabs(text, key);
+  if (!ok) speakBrowser(text); // fallback
+}
+
+async function speakElevenLabs(text, key) {
+  setTTSState('loading');
+
+  const cacheKey = currentStopIndex + '_' + route.id;
+  if (_audioCache[cacheKey]) {
+    playBlob(_audioCache[cacheKey]);
+    return true;
+  }
+
+  try {
+    const res = await fetch('https://api.elevenlabs.io/v1/text-to-speech/' + EL_VOICE_ID, {
+      method: 'POST',
+      headers: {
+        'Accept': 'audio/mpeg',
+        'Content-Type': 'application/json',
+        'xi-api-key': key,
+      },
+      body: JSON.stringify({ text, model_id: EL_MODEL, voice_settings: EL_SETTINGS }),
+    });
+
+    if (!res.ok) {
+      setTTSState('idle');
+      if (res.status === 401) {
+        localStorage.removeItem('el_key');
+        showToast('API anahtarı geçersiz, lütfen tekrar girin.');
+        showApiDialog();
+      } else {
+        showToast('Ses oluşturulamadı (' + res.status + '). Tarayıcı sesi kullanılıyor.');
+      }
+      return false;
+    }
+
+    const blob = await res.blob();
+    _audioCache[cacheKey] = blob;
+    playBlob(blob);
+    return true;
+  } catch (e) {
+    setTTSState('idle');
+    showToast('Bağlantı hatası. Tarayıcı sesi kullanılıyor.');
+    return false;
+  }
+}
+
+function playBlob(blob) {
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  const url = URL.createObjectURL(blob);
+  currentAudio = new Audio(url);
+  currentAudio.onplay   = () => { isSpeaking = true;  setTTSState('playing'); };
+  currentAudio.onended  = () => { isSpeaking = false; setTTSState('idle'); URL.revokeObjectURL(url); };
+  currentAudio.onerror  = () => { isSpeaking = false; setTTSState('idle'); };
+  currentAudio.play();
+}
+
+function speakBrowser(text) {
+  if (!window.speechSynthesis) { showToast('Sesli okuma desteklenmiyor.'); return; }
   const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'tr-TR'; u.rate = 0.92;
-  const trVoice = speechSynthesis.getVoices().find(v => v.lang.startsWith('tr'));
-  if (trVoice) u.voice = trVoice;
-  u.onstart = () => { isSpeaking = true;  updateTTSBtn(true); };
-  u.onend   = () => { isSpeaking = false; updateTTSBtn(false); };
-  u.onerror = () => { isSpeaking = false; updateTTSBtn(false); };
+  u.lang = 'tr-TR'; u.rate = 0.88; u.pitch = 1.08;
+  const voices = speechSynthesis.getVoices();
+  const female = voices.find(v => v.lang.startsWith('tr') && /female|kadin|kadın/i.test(v.name))
+               || voices.find(v => v.lang.startsWith('tr'));
+  if (female) u.voice = female;
+  u.onstart = () => { isSpeaking = true;  setTTSState('playing'); };
+  u.onend   = () => { isSpeaking = false; setTTSState('idle'); };
+  u.onerror = () => { isSpeaking = false; setTTSState('idle'); };
   speechSynthesis.speak(u);
 }
 
 function cancelTTS() {
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
   if (window.speechSynthesis) speechSynthesis.cancel();
   isSpeaking = false;
-  updateTTSBtn(false);
+  setTTSState('idle');
 }
 
-function updateTTSBtn(playing) {
+function setTTSState(state) {
   const btn   = document.getElementById('tts-btn');
   const label = document.getElementById('tts-label');
-  if (!label) return;
-  label.textContent = playing ? 'Durdurmak için Tıkla' : 'Sesli Dinle';
-  btn.classList.toggle('playing', playing);
+  if (!btn) return;
+  btn.classList.remove('playing', 'loading');
+  if (state === 'playing') {
+    label.textContent = 'Durdurmak için Tıkla';
+    btn.classList.add('playing');
+  } else if (state === 'loading') {
+    label.textContent = 'Ses oluşturuluyor…';
+    btn.classList.add('loading');
+  } else {
+    label.textContent = 'Sesli Dinle';
+  }
+}
+
+/* ─── API Key Dialog ─── */
+function showApiDialog() {
+  const stored = localStorage.getItem('el_key') || '';
+  document.getElementById('api-key-input').value = stored;
+  document.getElementById('api-dialog').style.display = 'flex';
+  setTimeout(() => document.getElementById('api-key-input').focus(), 50);
+}
+
+function closeApiDialog() {
+  document.getElementById('api-dialog').style.display = 'none';
+}
+
+function closeDialogOutside(e) {
+  if (e.target.id === 'api-dialog') closeApiDialog();
+}
+
+function saveApiKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  closeApiDialog();
+  if (key) {
+    localStorage.setItem('el_key', key);
+    startTTS(key);
+  } else {
+    // No key → use browser TTS
+    speakBrowser(route.stops[currentStopIndex].content.join(' '));
+  }
 }
 
 /* ─── Auto Advance ─── */

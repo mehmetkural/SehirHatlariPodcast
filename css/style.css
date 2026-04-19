@@ -453,6 +453,61 @@ button { cursor: pointer; border: none; background: none; font-family: inherit; 
   white-space: nowrap; opacity: 0; transition: opacity .3s;
 }
 
+/* ─── ElevenLabs API Dialog ─── */
+.dialog-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(0,0,0,.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.dialog-card {
+  background: #fff; border-radius: var(--r-xl); padding: 32px 28px;
+  max-width: 420px; width: 100%;
+  box-shadow: 0 32px 80px rgba(0,0,0,.4);
+  display: flex; flex-direction: column; gap: 14px;
+}
+.dialog-icon { font-size: 2.2rem; text-align: center; }
+.dialog-title {
+  font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800;
+  font-size: 1.2rem; color: var(--text); text-align: center; letter-spacing: -.01em;
+}
+.dialog-desc { font-size: .85rem; color: var(--muted); line-height: 1.6; text-align: center; }
+.dialog-input {
+  width: 100%; padding: 12px 14px; border: 1.5px solid var(--border);
+  border-radius: var(--r-md); font-size: .875rem; font-family: inherit;
+  color: var(--text); outline: none; transition: border-color .2s;
+}
+.dialog-input:focus { border-color: var(--primary); }
+.dialog-link {
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  font-size: .78rem; font-weight: 600; color: var(--primary);
+  text-decoration: none; opacity: .85; transition: opacity .2s;
+}
+.dialog-link:hover { opacity: 1; }
+.dialog-actions { display: flex; gap: 10px; margin-top: 4px; }
+.dialog-btn {
+  flex: 1; padding: 12px; border-radius: var(--r-md);
+  font-size: .875rem; font-weight: 700; transition: all .2s; cursor: pointer; border: none;
+}
+.dialog-btn--secondary { background: var(--surface-low); color: var(--muted); }
+.dialog-btn--secondary:hover { background: var(--surface-mid); }
+.dialog-btn--primary {
+  background: linear-gradient(to right, var(--primary), var(--primary-mid));
+  color: #fff; box-shadow: 0 4px 14px rgba(0,93,144,.3);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.dialog-btn--primary:hover { transform: scale(.98); }
+.dialog-note {
+  font-size: .72rem; color: var(--muted); text-align: center; line-height: 1.5; opacity: .75;
+}
+
+/* TTS loading state */
+.tts-btn.loading {
+  background: linear-gradient(to right, #3a4859, #525f71);
+}
+
 /* Leaflet */
 .leaflet-control-zoom { border: none !important; box-shadow: 0 2px 16px rgba(0,0,0,.18) !important; }
 .leaflet-control-zoom a { border-radius: 8px !important; }
