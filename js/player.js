@@ -32,16 +32,18 @@ document.addEventListener('DOMContentLoaded', () => {
 /* ─── Tab Switching ─── */
 function switchTab(tab) {
   activeTab = tab;
+
+  // Panel display
+  document.getElementById('panel-podcast').style.display = tab === 'podcast' ? 'flex'  : 'none';
+  document.getElementById('panel-stops').style.display   = tab === 'stops'   ? 'flex'  : 'none';
+  document.getElementById('panel-map').style.display     = tab === 'map'     ? 'block' : 'none';
+
+  // Nav active state
   ['podcast', 'stops', 'map'].forEach(t => {
-    const panel = document.getElementById('panel-' + t);
-    const btn   = document.getElementById('tab-' + t);
-    const isActive = t === tab;
-
-    panel.classList.toggle('hidden', !isActive);
-    btn.classList.toggle('active', isActive);
-
-    if (isActive && t === 'map' && map) setTimeout(() => map.invalidateSize(), 60);
+    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
+
+  if (tab === 'map' && map) setTimeout(() => map.invalidateSize(), 80);
 }
 
 /* ─── Stops List ─── */
