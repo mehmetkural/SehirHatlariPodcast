@@ -2,25 +2,21 @@
 let route = null;
 let currentStopIndex = 0;
 let map = null;
-let routePolyline = null;
 let stopMarkers = [];
-let currentMarker = null;
 let gpsWatchId = null;
-let ttsUtterance = null;
 let isSpeaking = false;
 let autoAdvanceEnabled = false;
 let autoAdvanceTimer = null;
-let activeMobileTab = 'podcast';
+let activeTab = 'podcast';
 
 /* ─── Init ─── */
 document.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(location.search);
-  const routeId = params.get('route');
+  route = ROUTES.find(r => r.id === params.get('route'));
 
-  route = ROUTES.find(r => r.id === routeId);
   if (!route) {
-    document.getElementById('podcast-content').innerHTML =
-      '<div class="status-message">Hat bulunamadı. <a href="index.html">Anasayfa</a>\'ya dönün.</div>';
+    document.getElementById('panel-podcast').innerHTML =
+      '<div class="flex items-center justify-center h-full text-white/60 text-sm p-8 text-center">Hat bulunamadı.<br><br><a href="index.html" class="underline">Ana sayfaya dön</a></div>';
     return;
   }
 
@@ -31,30 +27,69 @@ document.addEventListener('DOMContentLoaded', () => {
   buildStopsList();
   initMap();
   renderStop(0);
-  setupMobileTabs();
-  setupGPSButton();
 });
 
-/* ─── Stops sidebar ─── */
+/* ─── Tab Switching ─── */
+function switchTab(tab) {
+  activeTab = tab;
+  const tabs = ['podcast', 'stops', 'map'];
+
+  tabs.forEach(t => {
+    const panel = document.getElementById(`panel-${t}`);
+    const btn   = document.getElementById(`tab-${t}`);
+    const ind   = document.getElementById(`ind-${t}`);
+    const icon  = document.getElementById(`icon-${t}`);
+
+    const isActive = t === tab;
+
+    panel.classList.toggle('hidden', !isActive);
+
+    btn.style.color = isActive ? '#fff' : '';
+    btn.classList.toggle('text-white/40', !isActive);
+
+    if (ind) ind.classList.toggle('hidden', !isActive);
+
+    if (icon) {
+      icon.style.color = isActive ? '#fff' : '';
+      icon.style.fontVariationSettings = isActive
+        ? "'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24"
+        : "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24";
+    }
+
+    if (isActive && t === 'map' && map) {
+      setTimeout(() => map.invalidateSize(), 60);
+    }
+  });
+}
+
+/* ─── Stops Sidebar ─── */
 function buildStopsList() {
   const list = document.getElementById('stops-list');
   list.innerHTML = '';
 
   route.stops.forEach((stop, i) => {
+    const isLast = i === route.stops.length - 1;
     const item = document.createElement('div');
-    item.className = 'stop-item';
     item.id = `stop-item-${i}`;
+    item.className = 'flex items-start gap-3 px-3 py-3 rounded-xl cursor-pointer transition-colors hover:bg-surface-container';
+
     item.innerHTML = `
-      <div class="stop-dot-wrap">
-        <div class="stop-dot"></div>
-        <div class="stop-line"></div>
+      <div class="flex flex-col items-center pt-0.5 flex-shrink-0 select-none">
+        <div id="dot-${i}" class="w-3 h-3 rounded-full border-2 border-outline-variant bg-white transition-all duration-200 flex-shrink-0"></div>
+        ${!isLast ? `<div class="w-0.5 h-8 bg-outline-variant/40 mt-1.5 rounded-full"></div>` : ''}
       </div>
-      <div class="stop-info">
-        <div class="stop-item-name">${stop.name}</div>
-        <div class="stop-item-time">${stop.time} dk</div>
+      <div class="flex-1 min-w-0 pb-2">
+        <div id="stopname-${i}" class="font-headline font-bold text-sm text-on-surface leading-tight">${stop.name}</div>
+        <div class="text-[11px] text-outline mt-0.5">${stop.time}. dakika</div>
       </div>
+      <span class="material-symbols-outlined text-[16px] text-outline/40 mt-0.5 flex-shrink-0 self-center">chevron_right</span>
     `;
-    item.addEventListener('click', () => goToStop(i));
+
+    item.addEventListener('click', () => {
+      goToStop(i);
+      switchTab('podcast');
+    });
+
     list.appendChild(item);
   });
 }
@@ -62,20 +97,96 @@ function buildStopsList() {
 function updateStopsList(activeIndex) {
   route.stops.forEach((_, i) => {
     const item = document.getElementById(`stop-item-${i}`);
+    const dot  = document.getElementById(`dot-${i}`);
+    const name = document.getElementById(`stopname-${i}`);
     if (!item) return;
-    item.classList.toggle('active', i === activeIndex);
-    item.classList.toggle('visited', i < activeIndex);
+
+    if (i === activeIndex) {
+      item.style.background = 'rgba(0,93,144,0.07)';
+      dot.style.background   = '#005d90';
+      dot.style.borderColor  = '#005d90';
+      dot.style.boxShadow    = '0 0 0 3px rgba(0,93,144,0.2)';
+      name.style.color       = '#005d90';
+    } else if (i < activeIndex) {
+      item.style.background = '';
+      dot.style.background   = '#0077b6';
+      dot.style.borderColor  = '#0077b6';
+      dot.style.boxShadow    = '';
+      name.style.color       = '#1a1c1c';
+    } else {
+      item.style.background = '';
+      dot.style.background   = '#fff';
+      dot.style.borderColor  = '#bfc7d1';
+      dot.style.boxShadow    = '';
+      name.style.color       = '#1a1c1c';
+    }
   });
 
-  const activeItem = document.getElementById(`stop-item-${activeIndex}`);
-  if (activeItem) {
-    activeItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-  }
+  const active = document.getElementById(`stop-item-${activeIndex}`);
+  if (active) active.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+/* ─── Render Stop ─── */
+function renderStop(index) {
+  currentStopIndex = index;
+  const stop  = route.stops[index];
+  const total = route.stops.length;
+
+  // Progress
+  const pct = total > 1 ? (index / (total - 1)) * 100 : 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  // Meta
+  document.getElementById('stop-badge').textContent = `Durak ${index + 1} / ${total}`;
+  document.getElementById('stop-time-badge').innerHTML =
+    `<span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;margin-right:2px">schedule</span>${stop.time}. dakika`;
+  document.getElementById('stop-title').textContent = stop.name;
+
+  // Paragraphs
+  const container = document.getElementById('paragraphs');
+  container.innerHTML = '';
+  container.scrollTop = 0;
+
+  stop.content.forEach((text, i) => {
+    const p = document.createElement('p');
+    p.className = 'para-anim text-sm leading-relaxed';
+
+    if (i === 1 && stop.content.length > 1) {
+      // Middle para → blockquote style
+      p.style.cssText = 'background:rgba(0,119,182,0.05);border-left:4px solid #0077b6;padding:12px 16px;border-radius:0 10px 10px 0;font-style:italic;font-weight:500;color:#1a1c1c';
+    } else {
+      p.style.color = '#3a4859';
+    }
+
+    p.textContent = text;
+    container.appendChild(p);
+    setTimeout(() => p.classList.add('show'), 60 + i * 130);
+  });
+
+  // Nav buttons
+  const btnPrev = document.getElementById('btn-prev');
+  const btnNext = document.getElementById('btn-next');
+  btnPrev.style.opacity        = index === 0 ? '0.25' : '0.6';
+  btnPrev.style.pointerEvents  = index === 0 ? 'none' : 'auto';
+  btnNext.style.opacity        = index === total - 1 ? '0.25' : '0.6';
+  btnNext.style.pointerEvents  = index === total - 1 ? 'none' : 'auto';
+
+  updateStopsList(index);
+  updateMapFocus(index);
+  cancelTTS();
+
+  if (autoAdvanceEnabled) scheduleAutoAdvance(index);
+}
+
+function goToStop(index) {
+  if (!route || index < 0 || index >= route.stops.length) return;
+  cancelAutoAdvance();
+  renderStop(index);
 }
 
 /* ─── Map ─── */
 function initMap() {
-  map = L.map('route-map', { zoomControl: true });
+  map = L.map('route-map');
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
@@ -84,365 +195,171 @@ function initMap() {
 
   const latlngs = route.stops.map(s => [s.lat, s.lng]);
 
-  routePolyline = L.polyline(latlngs, {
+  const poly = L.polyline(latlngs, {
     color: route.color,
     weight: 4,
-    opacity: 0.7,
-    dashArray: '8, 4',
+    opacity: 0.75,
+    dashArray: '8 4',
   }).addTo(map);
 
   route.stops.forEach((stop, i) => {
-    const marker = L.circleMarker([stop.lat, stop.lng], {
+    const m = L.circleMarker([stop.lat, stop.lng], {
       radius: 7,
       fillColor: '#fff',
       color: route.color,
       weight: 2.5,
       fillOpacity: 1,
-    })
-      .addTo(map)
+    }).addTo(map)
       .bindTooltip(stop.name, { direction: 'top', offset: [0, -8] });
 
-    marker.on('click', () => goToStop(i));
-    stopMarkers.push(marker);
+    m.on('click', () => { goToStop(i); switchTab('podcast'); });
+    stopMarkers.push(m);
   });
 
-  map.fitBounds(routePolyline.getBounds(), { padding: [30, 30] });
+  map.fitBounds(poly.getBounds(), { padding: [32, 32] });
 }
 
-function updateMapFocus(stopIndex) {
-  const stop = route.stops[stopIndex];
-
+function updateMapFocus(index) {
+  const stop = route.stops[index];
   stopMarkers.forEach((m, i) => {
     m.setStyle({
-      fillColor: i <= stopIndex ? route.color : '#fff',
-      radius: i === stopIndex ? 10 : 7,
+      fillColor: i <= index ? route.color : '#fff',
+      radius: i === index ? 11 : 7,
     });
   });
-
-  map.setView([stop.lat, stop.lng], 14, { animate: true });
-
-  const overlay = document.getElementById('map-overlay');
-  overlay.style.display = 'block';
-  document.getElementById('overlay-stop').textContent = stop.name;
-  document.getElementById('overlay-desc').textContent =
-    stop.content[0].slice(0, 90) + '…';
-}
-
-/* ─── Render stop ─── */
-function renderStop(index) {
-  currentStopIndex = index;
-  const stop = route.stops[index];
-  const total = route.stops.length;
-
-  // Progress bar
-  const pct = total > 1 ? (index / (total - 1)) * 100 : 100;
-  document.getElementById('progress-fill').style.width = pct + '%';
-
-  // Podcast content
-  const content = document.getElementById('podcast-content');
-  content.innerHTML = `
-    <div class="stop-header">
-      <span class="stop-number">Durak ${index + 1} / ${total}</span>
-    </div>
-    <h1 class="stop-title">${stop.name}</h1>
-    <div class="stop-time-badge">⏱ Yaklaşık ${stop.time}. dakika</div>
-
-    <div style="display:flex; gap:10px; margin-bottom:24px; flex-wrap:wrap;">
-      <button class="tts-btn" id="tts-btn" onclick="toggleTTS()">
-        🔊 Sesli Dinle
-      </button>
-    </div>
-
-    <div class="podcast-paragraphs" id="paragraphs">
-      ${stop.content.map((p, i) => `
-        <p class="podcast-para" data-index="${i}">${p}</p>
-      `).join('')}
-    </div>
-
-    <div class="podcast-nav">
-      <button class="nav-btn nav-btn-prev" onclick="goToStop(${index - 1})" ${index === 0 ? 'disabled' : ''}>
-        ← Önceki
-      </button>
-      <button class="nav-btn nav-btn-next" onclick="goToStop(${index + 1})" ${index === total - 1 ? 'disabled' : ''}>
-        ${index === total - 1 ? 'Son Durak ✓' : 'Sonraki →'}
-      </button>
-      <div class="auto-advance">
-        <label class="toggle-switch" title="Otomatik ilerleme">
-          <input type="checkbox" id="auto-toggle" ${autoAdvanceEnabled ? 'checked' : ''} onchange="toggleAutoAdvance(this.checked)">
-          <span class="toggle-slider"></span>
-        </label>
-        <span>Otomatik</span>
-      </div>
-    </div>
-  `;
-
-  // Animate paragraphs in
-  const paras = content.querySelectorAll('.podcast-para');
-  paras.forEach((p, i) => {
-    setTimeout(() => p.classList.add('visible'), 80 + i * 140);
-  });
-
-  // Highlight first paragraph
-  if (paras.length > 0) {
-    setTimeout(() => paras[0].classList.add('playing'), 300);
-    setTimeout(() => paras[0].classList.remove('playing'), 3500);
+  if (activeTab === 'map') {
+    map.setView([stop.lat, stop.lng], 14, { animate: true });
   }
-
-  updateStopsList(index);
-  updateMapFocus(index);
-  cancelTTS();
-
-  if (autoAdvanceEnabled) {
-    scheduleAutoAdvance(index);
-  }
-
-  // Scroll podcast panel to top
-  document.getElementById('podcast-content').parentElement.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function goToStop(index) {
-  if (index < 0 || index >= route.stops.length) return;
-  cancelAutoAdvance();
-  renderStop(index);
-}
-
-/* ─── Text-to-Speech ─── */
+/* ─── TTS ─── */
 function toggleTTS() {
-  if (isSpeaking) {
-    cancelTTS();
-    return;
-  }
-  startTTS();
+  isSpeaking ? cancelTTS() : startTTS();
 }
 
 function startTTS() {
-  if (!window.speechSynthesis) {
-    showNotif('Tarayıcınız sesli okumayı desteklemiyor.');
-    return;
-  }
-
+  if (!window.speechSynthesis) { showNotif('Sesli okuma desteklenmiyor.'); return; }
   const stop = route.stops[currentStopIndex];
-  const fullText = stop.content.join(' ');
-
-  ttsUtterance = new SpeechSynthesisUtterance(fullText);
-  ttsUtterance.lang = 'tr-TR';
-  ttsUtterance.rate = 0.92;
-  ttsUtterance.pitch = 1;
-
-  const voices = speechSynthesis.getVoices();
-  const trVoice = voices.find(v => v.lang.startsWith('tr'));
-  if (trVoice) ttsUtterance.voice = trVoice;
-
-  ttsUtterance.onstart = () => {
-    isSpeaking = true;
-    updateTTSButton(true);
-    highlightParasWhileSpeaking();
-  };
-
-  ttsUtterance.onend = () => {
-    isSpeaking = false;
-    updateTTSButton(false);
-  };
-
-  ttsUtterance.onerror = () => {
-    isSpeaking = false;
-    updateTTSButton(false);
-  };
-
-  speechSynthesis.speak(ttsUtterance);
+  const utterance = new SpeechSynthesisUtterance(stop.content.join(' '));
+  utterance.lang  = 'tr-TR';
+  utterance.rate  = 0.92;
+  const trVoice = speechSynthesis.getVoices().find(v => v.lang.startsWith('tr'));
+  if (trVoice) utterance.voice = trVoice;
+  utterance.onstart = () => { isSpeaking = true;  updateTTSBtn(true); };
+  utterance.onend   = () => { isSpeaking = false; updateTTSBtn(false); };
+  utterance.onerror = () => { isSpeaking = false; updateTTSBtn(false); };
+  speechSynthesis.speak(utterance);
 }
 
 function cancelTTS() {
   if (window.speechSynthesis) speechSynthesis.cancel();
   isSpeaking = false;
-  updateTTSButton(false);
+  updateTTSBtn(false);
 }
 
-function updateTTSButton(speaking) {
-  const btn = document.getElementById('tts-btn');
-  if (!btn) return;
+function updateTTSBtn(speaking) {
+  const label = document.getElementById('tts-label');
+  const btn   = document.getElementById('tts-btn');
+  if (!label) return;
+  label.textContent = speaking ? 'Durdurmak için Tıkla' : 'Sesli Dinle';
   if (speaking) {
-    btn.innerHTML = `<span class="pulse"></span> Duraksatmak için Tıkla`;
-    btn.classList.add('speaking');
+    btn.style.backgroundImage = 'linear-gradient(to right, #004b74, #005d90)';
   } else {
-    btn.innerHTML = '🔊 Sesli Dinle';
-    btn.classList.remove('speaking');
+    btn.style.backgroundImage = '';
   }
 }
 
-function highlightParasWhileSpeaking() {
-  const paras = document.querySelectorAll('.podcast-para');
-  const stop = route.stops[currentStopIndex];
-  const durations = stop.content.map(p => Math.max(3000, p.length * 60));
-  const totalDuration = durations.reduce((a, b) => a + b, 0);
-
-  let elapsed = 0;
-  paras.forEach((p, i) => {
-    const delay = elapsed;
-    elapsed += durations[i];
-    setTimeout(() => {
-      if (!isSpeaking) return;
-      paras.forEach(el => el.classList.remove('playing'));
-      p.classList.add('playing');
-      p.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    }, delay);
-  });
-}
-
-/* ─── Auto advance ─── */
-function toggleAutoAdvance(enabled) {
-  autoAdvanceEnabled = enabled;
-  if (enabled) {
+/* ─── Auto Advance ─── */
+function toggleAutoAdvance() {
+  autoAdvanceEnabled = !autoAdvanceEnabled;
+  const btn = document.getElementById('auto-toggle-btn');
+  const dot = document.getElementById('auto-toggle-dot');
+  if (autoAdvanceEnabled) {
+    btn.style.background = '#008343';
+    dot.style.transform  = 'translateX(20px)';
     scheduleAutoAdvance(currentStopIndex);
   } else {
+    btn.style.background = '';
+    dot.style.transform  = '';
     cancelAutoAdvance();
   }
 }
 
 function scheduleAutoAdvance(index) {
   cancelAutoAdvance();
-  const stop = route.stops[index];
-  const nextStop = route.stops[index + 1];
-  if (!nextStop) return;
-
-  const waitMs = (nextStop.time - stop.time) * 60 * 1000;
-  autoAdvanceTimer = setTimeout(() => {
-    goToStop(index + 1);
-  }, waitMs);
+  const next = route.stops[index + 1];
+  if (!next) return;
+  const ms = (next.time - route.stops[index].time) * 60 * 1000;
+  autoAdvanceTimer = setTimeout(() => goToStop(index + 1), ms);
 }
 
 function cancelAutoAdvance() {
-  if (autoAdvanceTimer) {
-    clearTimeout(autoAdvanceTimer);
-    autoAdvanceTimer = null;
-  }
+  if (autoAdvanceTimer) { clearTimeout(autoAdvanceTimer); autoAdvanceTimer = null; }
 }
 
 /* ─── GPS ─── */
-function setupGPSButton() {
-  document.getElementById('gps-btn').addEventListener('click', () => {
-    if (gpsWatchId !== null) {
-      stopGPS();
-    } else {
-      startGPS();
-    }
-  });
+function toggleGPS() {
+  gpsWatchId !== null ? stopGPS() : startGPS();
 }
 
 function startGPS() {
-  if (!navigator.geolocation) {
-    showNotif('Tarayıcınız konum özelliğini desteklemiyor.');
-    return;
-  }
-
-  showNotif('📍 Konum izleniyor…');
-  document.getElementById('gps-btn').classList.add('active');
-  document.getElementById('gps-btn').textContent = '📍 GPS Aktif';
-
+  if (!navigator.geolocation) { showNotif('Konum desteklenmiyor.'); return; }
+  showNotif('📍 GPS konumu izleniyor…');
+  setGPSActive(true);
   gpsWatchId = navigator.geolocation.watchPosition(
     onGPSSuccess,
-    onGPSError,
+    () => stopGPS(),
     { enableHighAccuracy: true, maximumAge: 10000 }
   );
 }
 
 function stopGPS() {
-  if (gpsWatchId !== null) {
-    navigator.geolocation.clearWatch(gpsWatchId);
-    gpsWatchId = null;
-  }
-  document.getElementById('gps-btn').classList.remove('active');
-  document.getElementById('gps-btn').innerHTML = '📍 GPS';
+  if (gpsWatchId !== null) { navigator.geolocation.clearWatch(gpsWatchId); gpsWatchId = null; }
+  setGPSActive(false);
   showNotif('GPS kapatıldı.');
 }
 
+function setGPSActive(active) {
+  const dot   = document.getElementById('gps-dot');
+  const label = document.getElementById('gps-label');
+  if (active) {
+    dot.style.background  = '#6bfe9c';
+    dot.style.boxShadow   = '0 0 8px rgba(107,254,156,0.9)';
+    label.textContent     = 'GPS Aktif';
+    label.style.color     = '#6bfe9c';
+  } else {
+    dot.style.background  = '';
+    dot.style.boxShadow   = '';
+    label.textContent     = 'GPS';
+    label.style.color     = '';
+  }
+}
+
 function onGPSSuccess(pos) {
-  const userLat = pos.coords.latitude;
-  const userLng = pos.coords.longitude;
-
-  // Find nearest stop
-  let bestIndex = 0;
-  let bestDist = Infinity;
+  let bestIndex = 0, bestDist = Infinity;
   route.stops.forEach((stop, i) => {
-    const d = haversine(userLat, userLng, stop.lat, stop.lng);
-    if (d < bestDist) {
-      bestDist = d;
-      bestIndex = i;
-    }
+    const d = haversine(pos.coords.latitude, pos.coords.longitude, stop.lat, stop.lng);
+    if (d < bestDist) { bestDist = d; bestIndex = i; }
   });
-
-  // Only jump if within 800 m of a stop
   if (bestDist < 0.8 && bestIndex !== currentStopIndex) {
-    showNotif(`📍 ${route.stops[bestIndex].name}\'a geçiliyor`);
+    showNotif(`📍 ${route.stops[bestIndex].name}`);
     renderStop(bestIndex);
   }
 }
 
-function onGPSError(err) {
-  showNotif('Konum alınamadı. İzinleri kontrol edin.');
-  stopGPS();
-}
-
 function haversine(lat1, lng1, lat2, lng2) {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLng / 2) ** 2;
+  const R = 6371, d2r = Math.PI / 180;
+  const a = Math.sin((lat2-lat1)*d2r/2)**2
+    + Math.cos(lat1*d2r) * Math.cos(lat2*d2r) * Math.sin((lng2-lng1)*d2r/2)**2;
   return R * 2 * Math.asin(Math.sqrt(a));
 }
 
-/* ─── Mobile tabs ─── */
-function setupMobileTabs() {
-  const tabs = document.querySelectorAll('#player-tabs .tab-btn');
-  tabs.forEach(btn => {
-    btn.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
-      btn.classList.add('active');
-      activeMobileTab = btn.dataset.target;
-      updateMobileTabVisibility();
-    });
-  });
-  updateMobileTabVisibility();
-}
-
-function updateMobileTabVisibility() {
-  const panels = {
-    podcast: document.getElementById('podcast-panel'),
-    stops: document.getElementById('stops-panel'),
-    map: document.getElementById('map-panel'),
-  };
-
-  Object.entries(panels).forEach(([key, el]) => {
-    if (!el) return;
-    if (key === activeMobileTab) {
-      el.classList.add('tab-active');
-      el.style.display = key === 'map' ? 'block' : 'flex';
-      if (key === 'map' && map) setTimeout(() => map.invalidateSize(), 50);
-    } else {
-      el.classList.remove('tab-active');
-      if (window.innerWidth <= 700) el.style.display = 'none';
-    }
-  });
-}
-
-/* ─── Notification helper ─── */
-let notifTimer = null;
+/* ─── Toast ─── */
+let _notifTimer = null;
 function showNotif(msg) {
   const el = document.getElementById('gps-notif');
   el.textContent = msg;
-  el.classList.add('show');
-  if (notifTimer) clearTimeout(notifTimer);
-  notifTimer = setTimeout(() => el.classList.remove('show'), 3000);
+  el.style.opacity = '1';
+  if (_notifTimer) clearTimeout(_notifTimer);
+  _notifTimer = setTimeout(() => { el.style.opacity = '0'; }, 3000);
 }
-
-// Restore stops-panel display on larger screens
-window.addEventListener('resize', () => {
-  if (window.innerWidth > 700) {
-    document.getElementById('stops-panel').style.display = '';
-    document.getElementById('podcast-panel').style.display = 'flex';
-    document.getElementById('map-panel').style.display = '';
-    if (map) map.invalidateSize();
-  }
-});

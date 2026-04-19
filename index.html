@@ -5,20 +5,144 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Şehir Hatları Podcast — İstanbul Boğaz Yolculukları</title>
   <meta name="description" content="İstanbul Şehir Hatları vapurlarıyla seyahat ederken rotanızdaki tarihi eserleri ve önemli noktaları keşfedin." />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "outline": "#707881",
+            "secondary-container": "#d3e1f6",
+            "secondary": "#525f71",
+            "on-primary-container": "#f3f7ff",
+            "surface-container-lowest": "#ffffff",
+            "on-primary": "#ffffff",
+            "tertiary-fixed": "#6bfe9c",
+            "inverse-primary": "#94ccff",
+            "primary": "#005d90",
+            "tertiary-container": "#008343",
+            "on-secondary-fixed-variant": "#3a4859",
+            "on-background": "#1a1c1c",
+            "surface-variant": "#e2e2e2",
+            "inverse-on-surface": "#f0f1f1",
+            "primary-container": "#0077b6",
+            "on-primary-fixed-variant": "#004b74",
+            "secondary-fixed-dim": "#bac8dc",
+            "tertiary": "#006733",
+            "surface-container-low": "#f3f3f3",
+            "surface-bright": "#f9f9f9",
+            "on-error": "#ffffff",
+            "surface-container": "#eeeeee",
+            "on-primary-fixed": "#001d32",
+            "on-secondary-container": "#566475",
+            "primary-fixed": "#cde5ff",
+            "secondary-fixed": "#d6e4f9",
+            "error": "#ba1a1a",
+            "inverse-surface": "#2f3131",
+            "on-tertiary": "#ffffff",
+            "tertiary-fixed-dim": "#4ae183",
+            "primary-fixed-dim": "#94ccff",
+            "surface-dim": "#dadada",
+            "on-surface": "#1a1c1c",
+            "on-tertiary-fixed-variant": "#005228",
+            "on-error-container": "#93000a",
+            "on-tertiary-fixed": "#00210c",
+            "background": "#f9f9f9",
+            "on-tertiary-container": "#e2ffe4",
+            "surface": "#f9f9f9",
+            "surface-container-high": "#e8e8e8",
+            "on-secondary": "#ffffff",
+            "error-container": "#ffdad6",
+            "on-secondary-fixed": "#0f1c2c",
+            "surface-tint": "#006399",
+            "surface-container-highest": "#e2e2e2",
+            "on-surface-variant": "#404850",
+            "outline-variant": "#bfc7d1"
+          },
+          fontFamily: {
+            "headline": ["Plus Jakarta Sans"],
+            "body": ["Manrope"],
+            "label": ["Manrope"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "1.5rem",
+            "full": "9999px"
+          }
+        }
+      }
+    }
+  </script>
   <link rel="stylesheet" href="css/style.css" />
 </head>
-<body>
+<body class="font-body text-on-surface antialiased bg-surface" style="padding-bottom:110px; min-height:100dvh;">
 
-  <header class="home-header">
-    <div class="logo">⚓</div>
-    <h1>Şehir Hatları Podcast</h1>
-    <p>Vapurla ilerledikçe İstanbul'un binlerce yıllık tarihini dinleyin. Her iskele, bir hikaye.</p>
+  <!-- Fixed Header -->
+  <header class="fixed top-0 left-0 w-full z-50 bg-white/70 backdrop-blur-xl shadow-[0_1px_24px_rgba(0,0,0,0.06)] border-b border-white/60">
+    <div class="flex justify-between items-center px-6 py-4 max-w-5xl mx-auto">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl leading-none">⚓</span>
+        <span class="font-headline font-extrabold text-xl tracking-tight text-[#0d1b2a]">Şehir Hatları Podcast</span>
+      </div>
+      <span class="material-symbols-outlined text-primary cursor-pointer hover:opacity-70 transition-opacity">near_me</span>
+    </div>
   </header>
 
-  <main class="home-content">
-    <p class="section-title">Hatlar</p>
-    <div class="routes-grid" id="routes-grid"></div>
+  <!-- Hero -->
+  <section class="wave-shape relative pt-20 bg-[#0d1b2a] overflow-hidden min-h-[360px] flex flex-col items-center justify-center text-center px-6 pb-16">
+    <div class="absolute inset-0 bg-gradient-to-br from-primary-container/30 via-transparent to-transparent pointer-events-none"></div>
+    <!-- Wave decoration -->
+    <div class="absolute bottom-0 left-0 w-full opacity-[0.06] pointer-events-none">
+      <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,40 C240,80 480,0 720,40 C960,80 1200,0 1440,40 L1440,80 L0,80 Z" fill="#ffffff"/>
+      </svg>
+    </div>
+    <div class="relative z-10 max-w-lg">
+      <div class="inline-flex items-center justify-center w-16 h-16 bg-white/10 backdrop-blur-md rounded-full mb-6 border border-white/20">
+        <span class="text-4xl leading-none">⚓</span>
+      </div>
+      <h1 class="font-headline font-extrabold text-4xl sm:text-5xl text-white tracking-tight mb-3 leading-tight">Şehir Hatları Podcast</h1>
+      <p class="font-body text-slate-300 text-base sm:text-lg max-w-sm mx-auto leading-relaxed">Vapurun ritmiyle İstanbul'un hikayelerine kulak verin.</p>
+    </div>
+  </section>
+
+  <!-- Route Grid -->
+  <main class="max-w-5xl mx-auto px-5 -mt-10 relative z-20">
+    <p class="text-[10px] font-extrabold uppercase tracking-widest text-outline mb-5 px-1">Tüm Hatlar</p>
+    <div id="routes-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+
+    <!-- Coming soon placeholder -->
+    <div class="mt-5 rounded-2xl border-2 border-dashed border-outline-variant flex flex-col items-center justify-center p-10 opacity-50">
+      <span class="material-symbols-outlined text-4xl text-outline mb-3">more_horiz</span>
+      <p class="font-headline font-semibold text-outline text-sm">Yakında Yeni Rotalar</p>
+    </div>
   </main>
+
+  <!-- Bottom Navigation -->
+  <nav class="fixed bottom-0 left-0 w-full z-50 bg-white/80 backdrop-blur-xl flex justify-around items-center px-4 pb-7 pt-3 rounded-t-3xl shadow-[0_-8px_32px_rgba(0,0,0,0.08)] border-t border-white/60">
+    <div class="flex flex-col items-center justify-center bg-primary text-white rounded-2xl px-6 py-2 shadow-lg shadow-primary/30">
+      <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1">podcasts</span>
+      <span class="text-[11px] font-bold font-headline mt-0.5 uppercase tracking-wider">Hatlar</span>
+    </div>
+    <a href="#" class="flex flex-col items-center text-outline px-4 py-2 hover:text-primary transition-colors">
+      <span class="material-symbols-outlined text-2xl">directions_boat</span>
+      <span class="text-[11px] font-bold font-headline mt-0.5 uppercase tracking-wider">Duraklar</span>
+    </a>
+    <a href="#" class="flex flex-col items-center text-outline px-4 py-2 hover:text-primary transition-colors">
+      <span class="material-symbols-outlined text-2xl">map</span>
+      <span class="text-[11px] font-bold font-headline mt-0.5 uppercase tracking-wider">Harita</span>
+    </a>
+  </nav>
+
+  <!-- FAB -->
+  <button onclick="location.href='player.html?route=bogaz'"
+    class="fixed bottom-24 right-5 w-14 h-14 bg-gradient-to-br from-primary to-primary-container text-white rounded-full shadow-xl shadow-primary/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-transform z-40">
+    <span class="material-symbols-outlined text-2xl" style="font-variation-settings:'FILL' 1">play_arrow</span>
+  </button>
 
   <script src="js/routes.js"></script>
   <script>
@@ -26,24 +150,30 @@
 
     ROUTES.forEach(route => {
       const card = document.createElement('a');
-      card.className = 'route-card';
       card.href = `player.html?route=${route.id}`;
-      card.style.borderTopColor = route.color;
+      card.className = 'bg-surface-container-lowest rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.06)] overflow-hidden flex flex-col group transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_16px_40px_rgba(0,0,0,0.12)]';
+      card.style.borderTop = `6px solid ${route.color}`;
 
       card.innerHTML = `
-        <div class="route-card-top">
-          <span class="route-emoji">${route.emoji}</span>
-          <div>
-            <div class="route-name">${route.name}</div>
-            <div class="route-subtitle">${route.subtitle}</div>
+        <div class="p-7 flex flex-col flex-grow">
+          <div class="text-5xl mb-5 transition-all grayscale group-hover:grayscale-0 duration-300">${route.emoji}</div>
+          <h3 class="font-headline font-bold text-lg text-on-surface mb-1 leading-tight">${route.name}</h3>
+          <p class="font-body text-on-secondary-fixed-variant text-xs font-semibold mb-1">${route.subtitle}</p>
+          <p class="font-body text-outline text-sm mb-5 flex-grow leading-relaxed mt-2">${route.description}</p>
+          <div class="flex items-center gap-2.5 mb-5 flex-wrap">
+            <span class="flex items-center gap-1 px-3 py-1 bg-surface-container-low rounded-full text-[11px] font-bold text-on-secondary-fixed-variant">
+              <span class="material-symbols-outlined" style="font-size:13px;vertical-align:middle">schedule</span>
+              ~${route.duration} dk
+            </span>
+            <span class="flex items-center gap-1 px-3 py-1 bg-surface-container-low rounded-full text-[11px] font-bold text-on-secondary-fixed-variant">
+              <span class="material-symbols-outlined" style="font-size:13px;vertical-align:middle">location_on</span>
+              ${route.stops.length} durak
+            </span>
           </div>
+          <span class="font-headline font-bold text-sm flex items-center gap-1 transition-opacity group-hover:opacity-80" style="color:${route.color}">
+            Yolculuğa Başla <span>→</span>
+          </span>
         </div>
-        <p class="route-desc">${route.description}</p>
-        <div class="route-meta">
-          <span>🕐 ~${route.duration} dakika</span>
-          <span>📍 ${route.stops.length} durak</span>
-        </div>
-        <div class="route-cta">Yolculuğa Başla →</div>
       `;
 
       grid.appendChild(card);
